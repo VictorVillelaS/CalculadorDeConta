@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Conta</title>
+    <style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+}
+
+h1 {
+    color: #333;
+    text-align: center;
+}
+
+h2 {
+    color: #555;
+}
+
+input[type="text"],
+input[type="number"] {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+button {
+    padding: 10px 15px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul li {
+    background: #fff;
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+#listaPessoas li, #listaPratos li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#listaPessoas li button, #listaPratos li button {
+    background: transparent;
+    color: #dc3545;
+    border: none;
+    cursor: pointer;
+}
+
+#listaPessoas li button:hover, #listaPratos li button:hover {
+    text-decoration: underline;
+}
+
+.resultado {
+    background: #fff;
+    padding: 15px;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.resultado h3 {
+    margin: 0 0 10px;
+    color: #333;
+}
+
+    </style>
+
+
+</head>
+<body>
+
+<h1>Calculadora de Conta</h1>
+
+<h2>Pessoas</h2>
+<div id="pessoas">
+    <input type="text" placeholder="Nome da pessoa" id="pessoaInput">
+    <button onclick="adicionarPessoa()">Adicionar Pessoa</button>
+    <ul id="listaPessoas"></ul>
+</div>
+
+<h2>Pratos</h2>
+<div id="pratos">
+    <input type="text" placeholder="Nome do prato" id="pratoInput">
+    <input type="number" placeholder="Preço do prato" id="precoInput">
+    <input type="text" placeholder="Pessoas que comeram (separadas por vírgula)" id="pessoasPratoInput">
+    <button onclick="adicionarPrato()">Adicionar Prato</button>
+    <ul id="listaPratos"></ul>
+</div>
+
+<h2>Gorjeta (%)</h2>
+<input type="number" id="gorjetaInput" placeholder="Porcentagem de gorjeta" value="12">
+
+<button onclick="calcularConta()">Calcular Total</button>
+
+<div class="resultado" id="resultado"></div>
+
+<script>
+    const pessoas = [];
+    const pratos = [];
+
+    function adicionarPessoa() {
+        const pessoaInput = document.getElementById('pessoaInput');
+        const nome = pessoaInput.value.trim();
+        if (nome) {
+            pessoas.push(nome);
+            pessoaInput.value = '';
+            atualizarListaPessoas();
+        }
+    }
+
+    function adicionarPrato() {
+        const pratoInput = document.getElementById('pratoInput');
+        const precoInput = document.getElementById('precoInput');
+        const pessoasPratoInput = document.getElementById('pessoasPratoInput');
+
+        const nome = pratoInput.value.trim();
+        const preco = parseFloat(precoInput.value);
+        const pessoasQueComeram = pessoasPratoInput.value.split(',').map(p => p.trim()).filter(Boolean);
+
+        if (nome && !isNaN(preco) && pessoasQueComeram.length) {
+            pratos.push(new Prato(nome, preco, pessoasQueComeram));
+            pratoInput.value = '';
+            precoInput.value = '';
+            pessoasPratoInput.value = '';
+            atualizarListaPratos();
+        }
+    }
+
+    function atualizarListaPessoas() {
+        const listaPessoas = document.getElementById('listaPessoas');
+        listaPessoas.innerHTML = pessoas.map(p => `<li>${p}</li>`).join('');
+    }
+
+    function atualizarListaPratos() {
+        const listaPratos = document.getElementById('listaPratos');
+        listaPratos.innerHTML = pratos.map(p => `<li>${p.nome} - R$ ${p.preco.toFixed(2)} (para: ${p.pessoas.join(', ')})</li>`).join('');
+    }
+
+    function calcularConta() {
+        const gorjeta = parseFloat(document.getElementById('gorjetaInput').value) / 100;
+        const valores = {};
+
+        // Inicializa valores
+        pessoas.forEach(p => valores[p] = 0);
+        
+        // Calcula o valor para cada prato
+        pratos.forEach(prato => {
+            const valorRachado = prato.preco / prato.pessoas.length;
+            prato.pessoas.forEach(pessoa => {
+                valores[pessoa] += valorRachado;
+            });
+        });
+
+        // Adiciona gorjeta
+        for (const pessoa in valores) {
+            valores[pessoa] *= (1 + gorjeta);
+        }
+
+        // Exibe o resultado
+        const resultadoDiv = document.getElementById('resultado');
+        resultadoDiv.innerHTML = '<h3>Resultados:</h3>' + 
+            Object.entries(valores).map(([pessoa, valor]) => `${pessoa}: R$ ${valor.toFixed(2)}`).join('<br>');
+    }
+
+    class Prato {
+        constructor(nome, preco, pessoas) {
+            this.nome = nome;
+            this.preco = preco;
+            this.pessoas = pessoas;
+        }
+    }
+</script>
+
+</body>
+</html>
